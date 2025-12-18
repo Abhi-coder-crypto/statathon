@@ -39,6 +39,13 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Dataset } from "@shared/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function UploadPage() {
   const { toast } = useToast();
@@ -48,6 +55,7 @@ export default function UploadPage() {
   const [fullDataOpen, setFullDataOpen] = useState<number | null>(null);
   const [fixResults, setFixResults] = useState<Record<number, string[]>>({});
   const [isFixing, setIsFixing] = useState<Record<number, boolean>>({});
+  const [perfectDatasetId, setPerfectDatasetId] = useState<number | null>(null);
 
   const { data: datasets, isLoading } = useQuery<Dataset[]>({
     queryKey: ["/api/datasets"],
@@ -162,7 +170,13 @@ export default function UploadPage() {
     }
   };
 
-  const handleAutoFix = async (datasetId: number) => {
+  const handleAutoFix = async (datasetId: number, dataset: Dataset) => {
+    // Check if dataset is already perfect
+    if (dataset.qualityScore && dataset.qualityScore >= 0.95) {
+      setPerfectDatasetId(datasetId);
+      return;
+    }
+
     setIsFixing((prev) => ({ ...prev, [datasetId]: true }));
     try {
       const response = await fetch(`/api/data/${datasetId}/autofix`, {
@@ -528,7 +542,7 @@ export default function UploadPage() {
                                       <Button 
                                         variant="outline" 
                                         size="sm"
-                                        onClick={() => handleAutoFix(dataset.id)}
+                                        onClick={() => handleAutoFix(dataset.id, dataset)}
                                         disabled={isFixing[dataset.id] || fixResults[dataset.id]}
                                       >
                                         <Wrench className="h-4 w-4 mr-2" />
@@ -598,6 +612,47 @@ export default function UploadPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={perfectDatasetId !== null} onOpenChange={(open) => !open && setPerfectDatasetId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <CheckCircle className="h-6 w-6 text-chart-4" />
+              Dataset is Perfect!
+            </DialogTitle>
+            <DialogDescription className="pt-4 space-y-3">
+              <p className="text-base">
+                Your dataset is in excellent condition and doesn't require any fixes.
+              </p>
+              <div className="bg-chart-4/10 p-3 rounded-md space-y-2">
+                <p className="text-sm font-medium">Quality Metrics:</p>
+                <ul className="text-sm space-y-1 text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-chart-4" />
+                    Quality Score: 95%+
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-chart-4" />
+                    Data is complete and consistent
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-chart-4" />
+                    Ready for risk assessment
+                  </li>
+                </ul>
+              </div>
+              <p className="text-sm text-muted-foreground pt-2">
+                Proceed to Risk Assessment to analyze re-identification risk.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={() => setPerfectDatasetId(null)} variant="default">
+              Got it!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
