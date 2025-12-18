@@ -1,0 +1,6 @@
+Record_ID,Age,Gender,State,Income_Bracket,Education_Level,Occupation,Marital_Status,Income_Amount,Employment_Type
+NSO_00201,35,male,maharashtra,50000-100000,Graduate,Engineer,married,75000,full-time
+NSO_00202,28,FEMALE,karnataka,25000-50000,postgraduate,doctor,SINGLE,45000,FULL-TIME
+NSO_00203,42,M,Delhi,100000-150000,GRADUATE,manager,Married,120000,Full-Time
+NSO_00204,31,F,TAMIL NADU,50000-100000,graduate,Teacher,married,65000,Full-time
+NSO_00205,25,O,telangana,25000-50000,diploma,technician,single,35000,FULL-TIME

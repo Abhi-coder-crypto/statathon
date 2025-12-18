@@ -1,0 +1,4 @@
+Record_ID,Age,Gender,State,Income_Bracket,Education_Level,Occupation,Marital_Status,Income_Amount,Employment_Type
+NSO_00301,35,Male,Maharashtra,50000-100000,Graduate,Engineer,Married,75000,Full-Time
+NSO_00302,28,Female,Karnataka,25000-50000,PostGraduate,Doctor,Single,45000,Full-Time
+NSO_00303,42,Male,Delhi,100000-150000,Graduate,Manager,Married,120000,Full-Time

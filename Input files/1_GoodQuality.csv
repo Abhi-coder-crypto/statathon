@@ -1,0 +1,11 @@
+Record_ID,Age,Gender,State,Income_Bracket,Education_Level,Occupation,Marital_Status,Income_Amount,Employment_Type
+NSO_00001,35,Male,Maharashtra,50000-100000,Graduate,Engineer,Married,75000,Full-Time
+NSO_00002,28,Female,Karnataka,25000-50000,PostGraduate,Doctor,Single,45000,Full-Time
+NSO_00003,42,Male,Delhi,100000-150000,Graduate,Manager,Married,120000,Full-Time
+NSO_00004,31,Female,Tamil Nadu,50000-100000,Graduate,Teacher,Married,65000,Full-Time
+NSO_00005,25,Other,Telangana,25000-50000,Diploma,Technician,Single,35000,Full-Time
+NSO_00006,38,Male,West Bengal,50000-100000,Graduate,Accountant,Married,72000,Full-Time
+NSO_00007,29,Female,Gujarat,50000-100000,PostGraduate,Analyst,Single,58000,Full-Time
+NSO_00008,45,Male,Uttar Pradesh,100000-150000,Graduate,Director,Married,135000,Full-Time
+NSO_00009,32,Female,Rajasthan,25000-50000,Graduate,Nurse,Married,40000,Full-Time
+NSO_00010,26,Male,Odisha,25000-50000,Diploma,Mechanic,Single,32000,Full-Time

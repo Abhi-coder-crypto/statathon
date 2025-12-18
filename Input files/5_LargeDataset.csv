@@ -1,0 +1,21 @@
+Record_ID,Age,Gender,State,Income_Bracket,Education_Level,Occupation,Marital_Status,Income_Amount,Employment_Type
+NSO_00401,35,Male,Maharashtra,50000-100000,Graduate,Engineer,Married,75000,Full-Time
+NSO_00402,28,Female,Karnataka,25000-50000,PostGraduate,Doctor,Single,45000,Full-Time
+NSO_00403,42,Male,Delhi,100000-150000,Graduate,Manager,Married,120000,Full-Time
+NSO_00404,31,Female,Tamil Nadu,50000-100000,Graduate,Teacher,Married,65000,Full-Time
+NSO_00405,25,Other,Telangana,25000-50000,Diploma,Technician,Single,35000,Full-Time
+NSO_00406,38,Male,West Bengal,50000-100000,Graduate,Accountant,Married,72000,Full-Time
+NSO_00407,29,Female,Gujarat,50000-100000,PostGraduate,Analyst,Single,58000,Full-Time
+NSO_00408,45,Male,Uttar Pradesh,100000-150000,Graduate,Director,Married,135000,Full-Time
+NSO_00409,32,Female,Rajasthan,25000-50000,Graduate,Nurse,Married,40000,Full-Time
+NSO_00410,26,Male,Odisha,25000-50000,Diploma,Mechanic,Single,32000,Full-Time
+NSO_00411,36,Female,Punjab,50000-100000,Graduate,Consultant,Married,80000,Full-Time
+NSO_00412,41,Male,Haryana,100000-150000,PostGraduate,Architect,Married,118000,Full-Time
+NSO_00413,27,Female,Madhya Pradesh,25000-50000,Graduate,Clerk,Single,38000,Full-Time
+NSO_00414,33,Male,Uttarakhand,50000-100000,Diploma,Driver,Married,48000,Full-Time
+NSO_00415,39,Female,Himachal Pradesh,75000-100000,Graduate,Pharmacist,Married,88000,Full-Time
+NSO_00416,44,Male,Jharkhand,100000-150000,Graduate,Supervisor,Married,110000,Full-Time
+NSO_00417,24,Female,Assam,25000-50000,Diploma,Helper,Single,28000,Full-Time
+NSO_00418,37,Male,Tripura,50000-100000,Graduate,Electrician,Married,62000,Full-Time
+NSO_00419,30,Female,Meghalaya,50000-100000,Graduate,Admin,Single,55000,Full-Time
+NSO_00420,46,Male,Nagaland,75000-100000,Graduate,Officer,Married,95000,Full-Time
