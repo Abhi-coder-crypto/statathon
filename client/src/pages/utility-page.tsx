@@ -126,11 +126,11 @@ export default function UtilityPage() {
 
   const metrics = currentMeasurement?.metrics as any;
   
-  const radarData = metrics ? [
+  const radarData = currentMeasurement && metrics ? [
     { metric: "Statistical", original: 100, processed: (metrics.statisticalSimilarity || 0.85) * 100 },
-    { metric: "Correlation", original: 100, processed: (currentMeasurement.correlationPreservation || 0.9) * 100 },
-    { metric: "Distribution", original: 100, processed: (currentMeasurement.distributionSimilarity || 0.88) * 100 },
-    { metric: "Information", original: 100, processed: (1 - (currentMeasurement.informationLoss || 0.15)) * 100 },
+    { metric: "Correlation", original: 100, processed: (currentMeasurement?.correlationPreservation || 0.9) * 100 },
+    { metric: "Distribution", original: 100, processed: (currentMeasurement?.distributionSimilarity || 0.88) * 100 },
+    { metric: "Information", original: 100, processed: (1 - (currentMeasurement?.informationLoss || 0.15)) * 100 },
     { metric: "Query Accuracy", original: 100, processed: (metrics.queryAccuracy || 0.92) * 100 },
   ] : [];
 
