@@ -40,18 +40,17 @@ export function DashboardLayout({ children, title, breadcrumbs = [] }: Dashboard
                 <BreadcrumbItem>
                   <BreadcrumbLink href="/">Home</BreadcrumbLink>
                 </BreadcrumbItem>
-                {breadcrumbs.map((crumb, index) => (
-                  <React.Fragment key={`crumb-${index}`}>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      {crumb.href ? (
-                        <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
-                      ) : (
-                        <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                      )}
-                    </BreadcrumbItem>
-                  </React.Fragment>
-                ))}
+                {breadcrumbs.length > 0 && <BreadcrumbSeparator />}
+                {breadcrumbs.map((crumb, index) => [
+                  index > 0 ? <BreadcrumbSeparator key={`sep-${index}`} /> : null,
+                  <BreadcrumbItem key={`item-${index}`}>
+                    {crumb.href ? (
+                      <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                ]).flat()}
               </BreadcrumbList>
             </Breadcrumb>
 
