@@ -16,6 +16,63 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Helper: Standardize string values in a dataset
+function standardizeStringValues(data: any[], columns: string[]): { data: any[], fixes: string[] } {
+  const fixes: string[] = [];
+  const stringColumns = columns.filter((col) => {
+    return data.length > 0 && typeof data[0][col] === "string";
+  });
+
+  const canonicalMaps = new Map<string, Map<string, string>>();
+  
+  stringColumns.forEach((col) => {
+    const valueMap = new Map<string, Set<string>>();
+    
+    data.forEach((row) => {
+      const val = String(row[col] || "").trim();
+      const normalized = val.toLowerCase().replace(/\s+/g, " ");
+      
+      if (!valueMap.has(normalized)) {
+        valueMap.set(normalized, new Set());
+      }
+      valueMap.get(normalized)!.add(val);
+    });
+
+    const canonicalMap = new Map<string, string>();
+    let hasVariations = false;
+    
+    valueMap.forEach((variations, normalized) => {
+      const canonical = Array.from(variations)[0];
+      variations.forEach((variation) => {
+        canonicalMap.set(variation, canonical);
+        if (variation !== canonical) hasVariations = true;
+      });
+    });
+    
+    if (hasVariations) {
+      fixes.push(`Standardized ${col}: ${valueMap.size} unique values normalized to consistent casing`);
+      canonicalMaps.set(col, canonicalMap);
+    }
+  });
+
+  if (canonicalMaps.size > 0) {
+    const standardizedData = data.map((row) => {
+      const newRow = { ...row };
+      canonicalMaps.forEach((canonicalMap, col) => {
+        if (newRow[col]) {
+          const val = String(newRow[col]).trim();
+          newRow[col] = canonicalMap.get(val) || val;
+        }
+      });
+      return newRow;
+    });
+    
+    return { data: standardizedData, fixes };
+  }
+  
+  return { data, fixes: [] };
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -125,15 +182,16 @@ export async function registerRoutes(
         return data.length > 0 && typeof data[0][col] === "string";
       });
 
-      let inconsistencyIssues = 0;
+      let inconsistentRecords = 0;
+      const valueNormalizationMap = new Map<string, Map<string, string>>(); // col -> (actual -> canonical)
       
       stringColumns.forEach((col) => {
-        const values: string[] = [];
-        const valueMap = new Map<string, Set<string>>(); // Normalized -> actual values
+        const valueMap = new Map<string, Set<string>>(); // Normalized -> Set of actual values
+        const colValues: string[] = [];
         
         data.forEach((row) => {
           const val = String(row[col] || "").trim();
-          values.push(val);
+          colValues.push(val);
           
           // Normalize: lowercase and remove extra spaces
           const normalized = val.toLowerCase().replace(/\s+/g, " ");
@@ -144,33 +202,32 @@ export async function registerRoutes(
           valueMap.get(normalized)!.add(val);
         });
 
-        // Check for case/spacing variations
-        valueMap.forEach((variations) => {
-          if (variations.size > 1) {
-            // Different casings or spacings of same value
-            inconsistencyIssues += variations.size - 1;
-          }
-        });
-
-        // Check for abbreviations (e.g., "M" vs "Male")
-        const uniqueValues = new Set(values.filter(v => v));
-        uniqueValues.forEach((val1) => {
-          uniqueValues.forEach((val2) => {
-            if (val1 !== val2) {
-              // Check if one is abbreviation of the other
-              if ((val1.length < 3 && val2.startsWith(val1)) || 
-                  (val2.length < 3 && val1.startsWith(val2))) {
-                inconsistencyIssues++;
-              }
-            }
+        // Build canonical mapping for this column
+        const canonicalMap = new Map<string, string>();
+        valueMap.forEach((variations, normalized) => {
+          // Pick the first variation as canonical (usually the most common)
+          const canonical = Array.from(variations)[0];
+          variations.forEach((variation) => {
+            canonicalMap.set(variation, canonical);
           });
+        });
+        
+        valueNormalizationMap.set(col, canonicalMap);
+
+        // Count inconsistent records: any record with non-canonical casing/spacing
+        data.forEach((row) => {
+          const val = String(row[col] || "").trim();
+          const canonical = canonicalMap.get(val);
+          if (canonical && val !== canonical) {
+            inconsistentRecords++;
+          }
         });
       });
 
       // Calculate individual scores (0 to 1)
       const completenessScore = totalCells > 0 ? filledCells / totalCells : 0;
       const duplicationScore = duplicateRows > 0 ? Math.max(0, 1 - (duplicateRows / data.length)) : 1.0;
-      const consistencyScore = inconsistencyIssues > 0 ? Math.max(0.1, 1 - (inconsistencyIssues / Math.max(1, totalCells))) : 1.0;
+      const consistencyScore = inconsistentRecords > 0 ? Math.max(0.1, 1 - (inconsistentRecords / Math.max(1, data.length * 0.5))) : 1.0;
       
       // Weighted quality score (0 to 1)
       const qualityScore = Math.max(0, Math.min(1, completenessScore * 0.4 + duplicationScore * 0.35 + consistencyScore * 0.25));
@@ -259,25 +316,10 @@ export async function registerRoutes(
         fixes.push(`Removed ${duplicatesRemoved} duplicate records`);
       }
 
-      // Fix 2: Normalize string values (trim, consistent casing)
-      data = data.map((row) => {
-        const fixedRow: any = {};
-        columns.forEach((col) => {
-          let value = row[col];
-          if (typeof value === "string") {
-            value = value.trim();
-            // Normalize common categorical columns
-            if (col.toLowerCase().includes("gender") || col.toLowerCase().includes("sex")) {
-              value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-            } else if (col.toLowerCase().includes("state") || col.toLowerCase().includes("status")) {
-              value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-            }
-          }
-          fixedRow[col] = value;
-        });
-        return fixedRow;
-      });
-      fixes.push("Normalized string formatting and spacing");
+      // Fix 2: Standardize string values (handle case variations)
+      const { data: standardizedData, fixes: standardizationFixes } = standardizeStringValues(data, columns);
+      data = standardizedData;
+      fixes.push(...standardizationFixes);
 
       // Fix 3: Handle missing values intelligently
       const stringColumns = columns.filter((col) => {
