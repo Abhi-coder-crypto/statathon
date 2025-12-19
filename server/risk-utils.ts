@@ -155,16 +155,15 @@ function calculateMarketerRisk(
     // Marketer risk: 1.3x higher than prosecutor due to bulk targeting strategy
     // Attacker uses pattern analysis and external data matching
     const prosecutorRisk = 1.0 / ec.size;
-    let risk = prosecutorRisk * 1.3; // 130% of prosecutor risk
-    risk = Math.min(1.0, risk); // Cap at 1.0
+    const risk = prosecutorRisk * 1.3; // 130% of prosecutor risk (don't cap per-record)
     
-    perClassRisks.push(risk);
+    perClassRisks.push(Math.min(1.0, risk)); // Cap for display purposes only
 
     totalMarketerRisk += risk * ec.size;
 
     // Successful matches at >0.3 confidence
     if (risk > 0.3) {
-      successfulMatches += Math.round(ec.size * risk);
+      successfulMatches += Math.round(ec.size * Math.min(1.0, risk));
     }
   });
 
@@ -172,7 +171,7 @@ function calculateMarketerRisk(
     totalRecords > 0 ? totalMarketerRisk / totalRecords : 0;
 
   return {
-    overall: Math.min(overallRisk, 1.0),
+    overall: Math.min(overallRisk, 1.0), // Cap only the final overall result
     perClass: perClassRisks,
     successfulMatches,
   };
