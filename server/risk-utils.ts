@@ -83,73 +83,45 @@ function pitmanPopulationEstimate(
 
 /**
  * JOURNALIST ATTACK: Attacker does NOT know if target is in dataset
- * Risk = (sample equivalence class size) / (population equivalence class size)
- * Uses Pitman model to estimate population sizes
- * 
- * IMPORTANT: Any group smaller than k=2 is considered a violation and contributes significantly to risk
+ * Risk proportional to likelihood of successful re-identification
+ * For unique records: risk approaches 1.0 (certain re-identification)
+ * For k-anonymous groups: risk = 1/k (inverse of group size)
  */
 function calculateJournalistRisk(
   equivalenceClasses: EquivalenceClass[],
   sampleSize: number,
-  populationSize: number = 10000 // Assumed population multiplier
+  populationSize: number = 10000
 ): {
   overall: number;
   perClass: number[];
   sampleRecordsAtRisk: number;
 } {
   const totalRecords = equivalenceClasses.reduce((sum, ec) => sum + ec.size, 0);
-  const sampleUniques = equivalenceClasses.filter((ec) => ec.size === 1).length;
-
-  // Count k-anonymity violations (groups with size < 2)
-  const kViolations = equivalenceClasses.filter((ec) => ec.size < 2).length;
-
-  // Estimate population uniques using Pitman model
-  const estimatedPopulationUniques = pitmanPopulationEstimate(
-    sampleUniques,
-    totalRecords,
-    populationSize
-  );
 
   let totalJournalistRisk = 0;
   const perClassRisks: number[] = [];
   let sampleRecordsAtRisk = 0;
 
   equivalenceClasses.forEach((ec) => {
-    // For groups that violate k-anonymity, risk is proportionally higher
-    let risk: number;
-    
-    if (ec.size === 1) {
-      // Unique records: high risk for journalist attack (50% risk)
-      risk = 0.5;
-    } else {
-      // For non-unique small groups, calculate based on population estimate
-      const sampleProportion = ec.size / totalRecords;
-      const estimatedPopGroupSize = Math.max(
-        1,
-        Math.round(sampleProportion * populationSize)
-      );
-      risk = Math.min(1.0, ec.size / estimatedPopGroupSize);
-    }
-    
+    // Journalist risk: 1 / group_size (same core logic as prosecutor)
+    // But interpreted as: "if I randomly picked someone, could this be my target?"
+    const risk = 1.0 / ec.size;
     perClassRisks.push(risk);
 
     // Weight by sample group size
     totalJournalistRisk += risk * ec.size;
 
-    // Count records at risk (risk > 0.2)
+    // Count records at risk
     if (risk > 0.2) {
       sampleRecordsAtRisk += ec.size;
     }
   });
 
-  // Add penalty for k-anonymity violations
-  const violationPenalty = Math.min(0.3, (kViolations / totalRecords) * 0.5);
-  let overallRisk =
+  const overallRisk =
     totalRecords > 0 ? totalJournalistRisk / totalRecords : 0;
-  overallRisk = Math.min(1.0, overallRisk + violationPenalty);
 
   return {
-    overall: overallRisk,
+    overall: Math.min(overallRisk, 1.0),
     perClass: perClassRisks,
     sampleRecordsAtRisk,
   };
@@ -158,10 +130,8 @@ function calculateJournalistRisk(
 /**
  * MARKETER ATTACK: Attacker wants mass re-identification
  * Goal: Re-identify many records (some errors acceptable)
- * Risk = Average of (sample_group / population_group) across all records
- * Similar to Journalist but focuses on average re-identification probability
- * 
- * IMPORTANT: Groups violating k-anonymity have higher risk for mass targeting
+ * Risk = same as prosecutor/journalist: 1/k (group size)
+ * Marketer is slightly more effective due to pattern analysis
  */
 function calculateMarketerRisk(
   equivalenceClasses: EquivalenceClass[],
@@ -173,38 +143,17 @@ function calculateMarketerRisk(
   successfulMatches: number;
 } {
   const totalRecords = equivalenceClasses.reduce((sum, ec) => sum + ec.size, 0);
-  
-  // Count k-anonymity violations (groups with size < 2)
-  const kViolations = equivalenceClasses.filter((ec) => ec.size < 2).length;
 
   let totalMarketerRisk = 0;
   const perClassRisks: number[] = [];
   let successfulMatches = 0;
 
   equivalenceClasses.forEach((ec) => {
-    // For unique records, marketer attack is very effective (60% risk)
-    let risk: number;
-    
-    if (ec.size === 1) {
-      risk = 0.6;
-    } else {
-      // For non-unique small groups, marketer can still identify patterns
-      const sampleProportion = ec.size / totalRecords;
-      const estimatedPopGroupSize = Math.max(
-        1,
-        Math.round(sampleProportion * populationSize)
-      );
-
-      // Base risk calculation
-      risk = ec.size / estimatedPopGroupSize;
-
-      // Apply targeting efficiency: marketer uses pattern analysis
-      // Boost effectiveness for groups smaller than 5
-      const targetingBoost = Math.min(0.4, (5 - ec.size) * 0.1);
-      risk = Math.min(1.0, risk * (1 + targetingBoost));
-    }
-
+    // Marketer risk: 1 / group_size (same as other attacks)
+    // Marketer can efficiently target these records
+    const risk = 1.0 / ec.size;
     perClassRisks.push(risk);
+
     totalMarketerRisk += risk * ec.size;
 
     // Successful matches at >0.3 confidence
@@ -213,14 +162,11 @@ function calculateMarketerRisk(
     }
   });
 
-  // Add penalty for k-anonymity violations (marketer targets small groups)
-  const violationPenalty = Math.min(0.25, (kViolations / totalRecords) * 0.5);
-  let overallRisk =
+  const overallRisk =
     totalRecords > 0 ? totalMarketerRisk / totalRecords : 0;
-  overallRisk = Math.min(1.0, overallRisk + violationPenalty);
 
   return {
-    overall: overallRisk,
+    overall: Math.min(overallRisk, 1.0),
     perClass: perClassRisks,
     successfulMatches,
   };
