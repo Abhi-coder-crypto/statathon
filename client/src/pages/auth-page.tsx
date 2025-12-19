@@ -66,7 +66,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <div className="flex-1 flex items-center justify-center p-8 bg-blue-50">
+      <div className="flex-1 flex items-center justify-center p-8 bg-sky-400">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
