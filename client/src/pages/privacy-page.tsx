@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,6 @@ import type { Dataset, PrivacyOperation } from "@shared/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { PrivacyResultsDetail } from "@/components/privacy-results-detail";
 
 const techniques = [
   {
@@ -70,6 +70,7 @@ const techniques = [
 
 export default function PrivacyPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [selectedDataset, setSelectedDataset] = useState<string>("");
   const [selectedTechnique, setSelectedTechnique] = useState("k-anonymity");
   const [quasiIdentifiers, setQuasiIdentifiers] = useState<string[]>([]);
@@ -118,7 +119,29 @@ export default function PrivacyPage() {
         title: "Privacy enhancement complete",
         description: `${techniques.find(t => t.id === selectedTechnique)?.name} applied successfully.`,
       });
-      setTimeout(() => setProcessingProgress(0), 2000);
+      setTimeout(() => {
+        setProcessingProgress(0);
+        // Navigate to results page with data
+        navigate("/privacy-results", {
+          state: {
+            result: {
+              technique: data.technique,
+              recordsSuppressed: data.recordsSuppressed || 0,
+              totalRecords: selectedDatasetObj?.rowCount || 0,
+              informationLoss: data.informationLoss || 0,
+              equivalenceClasses: (data.parameters as any)?.equivalenceClasses,
+              avgGroupSize: (data.parameters as any)?.avgGroupSize,
+              privacyRisk: (data.parameters as any)?.privacyRisk,
+              diverseClasses: (data.parameters as any)?.diverseClasses,
+              violatingClasses: (data.parameters as any)?.violatingClasses,
+              avgDiversity: (data.parameters as any)?.avgDiversity,
+              satisfyingClasses: (data.parameters as any)?.satisfyingClasses,
+              avgDistance: (data.parameters as any)?.avgDistance,
+              maxDistance: (data.parameters as any)?.maxDistance,
+            }
+          }
+        });
+      }, 1000);
     },
     onError: (error: Error) => {
       setProcessingProgress(0);
@@ -550,25 +573,6 @@ export default function PrivacyPage() {
             </CardContent>
           </Card>
 
-          {currentOperation && (
-            <PrivacyResultsDetail 
-              result={{
-                technique: currentOperation.technique,
-                recordsSuppressed: currentOperation.recordsSuppressed || 0,
-                totalRecords: selectedDatasetObj?.rowCount || 0,
-                informationLoss: currentOperation.informationLoss || 0,
-                equivalenceClasses: (currentOperation.parameters as any)?.equivalenceClasses,
-                avgGroupSize: (currentOperation.parameters as any)?.avgGroupSize,
-                privacyRisk: (currentOperation.parameters as any)?.privacyRisk,
-                diverseClasses: (currentOperation.parameters as any)?.diverseClasses,
-                violatingClasses: (currentOperation.parameters as any)?.violatingClasses,
-                avgDiversity: (currentOperation.parameters as any)?.avgDiversity,
-                satisfyingClasses: (currentOperation.parameters as any)?.satisfyingClasses,
-                avgDistance: (currentOperation.parameters as any)?.avgDistance,
-                maxDistance: (currentOperation.parameters as any)?.maxDistance,
-              }}
-            />
-          )}
         </div>
       </div>
     </DashboardLayout>

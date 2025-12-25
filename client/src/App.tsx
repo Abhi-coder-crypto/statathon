@@ -17,6 +17,7 @@ import ReportsPage from "@/pages/reports-page";
 import ConfigPage from "@/pages/config-page";
 import ProfilePage from "@/pages/profile-page";
 import HelpPage from "@/pages/help-page";
+import PrivacyResultsPage from "@/pages/privacy-results-page";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <ProtectedRoute path="/upload" component={UploadPage} />
       <ProtectedRoute path="/risk" component={RiskPage} />
       <ProtectedRoute path="/privacy" component={PrivacyPage} />
+      <ProtectedRoute path="/privacy-results" component={PrivacyResultsPage} />
       <ProtectedRoute path="/utility" component={UtilityPage} />
       <ProtectedRoute path="/reports" component={ReportsPage} />
       <ProtectedRoute path="/config" component={ConfigPage} />
